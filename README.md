@@ -134,7 +134,8 @@ Logik für das **Gesamtrisiko**:
 ---
 
 ## 📄 Lizenz
-
-Dieses Projekt steht unter der MIT-Lizenz - siehe [LICENSE](LICENSE) Datei für Details.
+Dieses Projekt steht unter der **MIT-Lizenz** – siehe [LICENSE](LICENSE) Datei für Details.  
+Es wurde im Rahmen der Weiterbildung zum **Data Analyst (IHK)** zu Lern- und Demonstrationszwecken erstellt.  
+Eine kommerzielle Nutzung oder Weitergabe der enthaltenen Daten ist ausgeschlossen.  
 
 © 2025 Thorsten Teetzen
