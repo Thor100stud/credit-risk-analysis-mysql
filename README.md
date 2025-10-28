@@ -1,233 +1,140 @@
-# Tagesablauf Dokumentations-App
+# 🏦 Credit Risk Analysis – Kreditrisikobewertung mit SQL (MySQL Workbench)
+
+## 💻 Code-Beispiel (MySQL Workbench)
+<p align="center">
+  <img src="credit_risk_code_preview.png" alt="SQL Code Screenshot" width="90%">
+</p>
+
+## 📊 Ergebnisübersicht
+<p align="center">
+  <img src="credit_risk_result_preview.png" alt="SQL Ergebnis Screenshot" width="60%">
+</p>
+
+---
+
+## 🧾 Projektübersicht
+
+| Kategorie | Details |
+|------------|----------|
+| 🧠 **Thema** | Kreditrisikobewertung & Risiko-Ampelsystem mit SQL |
+| 🧰 **Tools** | MySQL Workbench, SQL (Views, Aggregationen, Case-Statements) |
+| 📊 **Datengrundlage** | Credit Risk Dataset mit 32.581 Kreditfällen |
+| ⏱️ **Zeitraum** | Oktober 2025 |
+| 🎯 **Ziel** | Entwicklung eines datenbasierten Risikobewertungssystems zur Identifikation von Hochrisiko-Kreditnehmern |
+| 💡 **Schwierigkeitsgrad** | Fortgeschritten – Fokus auf Datenbereinigung, Analysen & Risiko-Klassifizierung |
+
+---
+
+## 🎯 Projektziel
+Ziel des Projekts war die Entwicklung eines **Risiko-Ampelsystems** zur systematischen Bewertung von Kreditrisiken.  
+Durch SQL-basierte Analysen wurden Hochrisiko-Profile identifiziert und Handlungsempfehlungen für das Kreditmanagement abgeleitet.
+
+---
+
+## 🧩 Aufgabenstellung
+Analysiere einen Datensatz mit über 32.000 Kreditfällen, um:
+- Risikofaktoren und Ausfallmuster zu identifizieren,  
+- ein mehrstufiges **Ampelsystem** (grün/gelb/rot) zur Risikobewertung zu entwickeln,  
+- Empfehlungen zur Minimierung von Kreditausfällen zu erarbeiten.
 
-Eine FastAPI-basierte Anwendung zur Dokumentation von Tagesabläufen mit JWT-Authentifizierung und Excel-Export.
+---
 
-## Features
+## 🧮 Datengrundlage
+- **Quelle:** Credit Risk Dataset mit 32.581 Datensätzen  
+- **Struktur:** Kreditnehmerdaten (Alter, Einkommen, Beschäftigungsdauer), Kreditdetails (Betrag, Zinssatz, Rating), Ausfallhistorie  
+- **Tools:** MySQL Workbench (Views, Aggregationen, Case-Statements, Subqueries)
 
-- Benutzerregistrierung und -authentifizierung mit JWT
-- Erfassung von Tagesablauf-Einträgen mit automatischem Zeitstempel
-- CRUD-Operationen für Einträge (Erstellen, Lesen, Aktualisieren, Löschen)
-- Excel-Export aller Einträge eines Benutzers
-- Benutzer-Isolation (jeder sieht nur seine eigenen Einträge)
-- Passwort-Hashing mit bcrypt
-- Input-Validierung mit Pydantic
+---
 
-## Installation
+## 🔍 Analyseschritte
 
-### 1. Dependencies installieren
+### 1️⃣ **Datenbereinigung & Vorbereitung**
+- Identifikation und Bereinigung fehlender Werte in `loan_int_rate`  
+- Berechnung kategoriespezifischer Durchschnittswerte für jede `loan_grade` (A–G)  
+- Korrektur von Ausreißern (z. B. 123 Jahre Betriebszugehörigkeit bei 21-Jährigen)  
+- Erstellung von **Altersgruppen** (20-24, 25-34, 35-44, 45-54, 55+)
 
-```bash
-pip install -r requirements.txt
-```
+### 2️⃣ **Explorative Datenanalyse**
+- Analyse von **Kreditvolumen nach Altersgruppen** → 20-24-Jährige erhalten unverhältnismäßig hohe Kredite  
+- Identifikation **säumiger Kunden**: 7.108 Zahlungsausfälle (21,8 % Säumigkeitsrate)  
+- Untersuchung der **Säumigkeitsrate nach Altersgruppen** → Höchste Rate bei 55+  
+- Analyse von **Einkommensmustern** → Auffällig hohe Einkommen bei 20-24-Jährigen (Verdacht auf gefälschte Angaben)
 
-### 2. Umgebungsvariablen prüfen
+### 3️⃣ **Risikobewertung nach Kriterien**
+Das Ampelsystem bewertet Kredite nach **8 Risikofaktoren**:
 
-Die `.env` Datei enthält bereits einen generierten JWT Secret Key. Bei Bedarf kannst du einen neuen generieren:
+| Kriterium | Grün | Gelb | Rot |
+|-----------|------|------|-----|
+| **Historischer Ausfall** | Kein Ausfall | - | Ausfall vorhanden |
+| **Aktuelles Versäumnis** | Keine Säumnis | Säumig | - |
+| **Einkommen** | > 60.000 € | 20.000–60.000 € | < 20.000 € |
+| **Kreditverwendung** | Education, Venture | Debt Consolidation, Home Improvement, Medical | - |
+| **Alter** | 20-44 Jahre | 45-54 Jahre | 55+ Jahre |
+| **Kreditrating** | A, B | C | D–G |
+| **Verschuldungsgrad** | < 10 % | 10-29 % | ≥ 30 % |
 
-```python
-import secrets
-print(secrets.token_hex(32))
-```
+### 4️⃣ **Gesamtrisiko-Klassifizierung**
+Logik für das **Gesamtrisiko**:
+- **ROT** → wenn historischer Ausfall ODER aktuelles Versäumnis ODER ≥ 4 rote Kriterien  
+- **GELB** → wenn ≥ 1 rotes Kriterium ODER ≥ 1 gelbes Kriterium  
+- **GRÜN** → alle Kriterien grün
 
-### 3. Anwendung starten
+**Ergebnis:**  
+- **18.234** Kredite → **ROT** (56 %)  
+- **10.487** Kredite → **GELB** (32 %)  
+- **3.860** Kredite → **GRÜN** (12 %)
 
-```bash
-uvicorn main:app --reload
-```
+---
 
-Die API läuft dann unter: `http://127.0.0.1:8000`
+## 📈 Ergebnisse & Insights
 
-## API-Dokumentation
+### 🔴 **Hochrisiko-Segmente**
+- **Altersgruppe 20-24:** Höchstes Kreditvolumen, aber geringe Bonität (niedriges Einkommen, geringe Beschäftigungsdauer)  
+- **Kreditklasse D-G:** 42 % aller Kredite fallen in schlechtere Ratings → Hohe Ausfallwahrscheinlichkeit  
+- **Verwendungszweck "Debt Consolidation":** Erhöhte Säumigkeitsrate von 28,3 %
 
-FastAPI generiert automatisch eine interaktive API-Dokumentation:
+### 🟡 **Kritische Faktoren**
+- **Beschäftigungsdauer < 1 Jahr:** Ausfallquote von 24,7 %  
+- **Verschuldungsgrad > 30 %:** Stark erhöhtes Risiko  
+- **Einkommen < 20.000 €:** 2.860 säumige Kunden in der Altersgruppe 20-24
 
-- **Swagger UI:** http://127.0.0.1:8000/docs
-- **ReDoc:** http://127.0.0.1:8000/redoc
+### 🟢 **Empfehlungen**
+1. **Verschärfte Prüfung** für Altersgruppe 20-24 und Kreditklassen D-G  
+2. **Einkommensprüfung** bei jungen Kreditnehmern (Verdacht auf gefälschte Angaben)  
+3. **Ablehnung** von Krediten mit ≥ 4 roten Kriterien  
+4. **Monitoring** für gelbe Kredite mit regelmäßiger Überprüfung
 
-## Verwendung
+---
 
-### 1. Benutzer registrieren
+## 🧠 Learnings
+- Aufbau komplexer **SQL-Views** für mehrstufige Risikobewertungen  
+- Anwendung von **CASE-Statements** für Kategorisierung und Ampel-Logik  
+- Umgang mit fehlenden Daten und Ausreißern  
+- Entwicklung eines praxisnahen **Scoring-Systems** für Kreditentscheidungen
 
-**Endpoint:** `POST /auth`
+---
 
-```json
-{
-  "email": "max@example.com",
-  "username": "maxmustermann",
-  "first_name": "Max",
-  "last_name": "Mustermann",
-  "password": "SicheresPasswort123!"
-}
-```
+## 📁 Projektdateien
+| Datei | Beschreibung |
+|--------|---------------|
+| `Abschlussprojekt_credit_risk_Thorsten_Teetzen.sql` | SQL-Code mit Analysen und Risiko-Ampel |
+| `Abschlussprojekt_credit_risk_Thorsten_Teetzen.pptx` | Präsentation der Ergebnisse |
 
-**Passwort-Anforderungen:**
-- Mindestens 8 Zeichen
-- Mindestens eine Ziffer
-- Mindestens ein Sonderzeichen (!@#$%^&*()-_=+[]{};:,.<>?/\|)
+---
 
-### 2. Anmelden und Token erhalten
+## 👤 Autor
 
-**Endpoint:** `POST /token`
+**Thorsten Teetzen**  
+*Data Analyst (IHK-Zertifizierung in Ausbildung)*  
 
-**Form Data:**
-- username: `maxmustermann`
-- password: `SicheresPasswort123!`
+📅 **Projektzeitraum:** Oktober 2025  
+🌍 **Standorte:** Germany / Asia (Remote)  
+🔗 [LinkedIn-Profil](https://www.linkedin.com/in/thorsten-teetzen-744891350)
 
-**Response:**
-```json
-{
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
+---
 
-### 3. Token verwenden
+## 📄 Lizenz
 
-Füge den Token in alle geschützten Requests ein:
+Dieses Projekt steht unter der MIT-Lizenz - siehe [LICENSE](LICENSE) Datei für Details.
 
-**Header:**
-```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-### 4. Tagesablauf-Eintrag erstellen
-
-**Endpoint:** `POST /log`
-
-```json
-{
-  "activity": "Meeting mit Team",
-  "description": "Besprechung der Projektfortschritte und nächste Schritte",
-  "duration_minutes": 60
-}
-```
-
-Der Zeitstempel wird automatisch beim Erstellen hinzugefügt!
-
-### 5. Alle Einträge abrufen
-
-**Endpoint:** `GET /logs`
-
-Gibt alle deine Einträge zurück.
-
-### 6. Einzelnen Eintrag abrufen
-
-**Endpoint:** `GET /log/{log_id}`
-
-Beispiel: `GET /log/1`
-
-### 7. Eintrag aktualisieren
-
-**Endpoint:** `PUT /log/{log_id}`
-
-```json
-{
-  "activity": "Meeting mit Team (aktualisiert)",
-  "description": "Detaillierte Besprechung mit neuen Erkenntnissen",
-  "duration_minutes": 75
-}
-```
-
-### 8. Eintrag löschen
-
-**Endpoint:** `DELETE /log/{log_id}`
-
-### 9. Excel-Export
-
-**Endpoint:** `GET /export`
-
-Lädt eine Excel-Datei mit allen deinen Einträgen herunter. Die Datei enthält:
-
-- ID
-- Datum
-- Uhrzeit
-- Aktivität
-- Beschreibung
-- Dauer (Minuten)
-- Benutzer
-- Gesamtdauer-Berechnung
-
-**Dateiname-Format:** `tagesablauf_{username}_{timestamp}.xlsx`
-
-## Projektstruktur
-
-```
-dokumentations_app/
-├── main.py              - Anwendungseinstiegspunkt
-├── auth.py              - Authentifizierungs-Router (Registrierung, Login)
-├── routes.py            - DailyLog CRUD-Operationen
-├── export.py            - Excel-Export-Funktionalität
-├── models.py            - SQLAlchemy Datenbankmodelle
-├── data_model.py        - Pydantic Validierungs-Schemas
-├── database.py          - Datenbankkonfiguration
-├── helper.py            - JWT und Auth-Utilities
-├── .env                 - Umgebungsvariablen
-├── requirements.txt     - Python-Dependencies
-├── dokumentation.db     - SQLite-Datenbank (wird automatisch erstellt)
-└── temp/                - Temporäre Excel-Dateien
-```
-
-## Datenmodell
-
-### Users
-- id (Primary Key)
-- email (unique)
-- username (unique)
-- first_name
-- last_name
-- hashed_password
-- is_active
-- role
-
-### DailyLog
-- id (Primary Key)
-- activity
-- description
-- duration_minutes
-- created_at (automatisch)
-- owner_id (Foreign Key → Users)
-
-## Sicherheit
-
-- JWT mit HS256-Algorithmus
-- Token-Ablaufzeit: 30 Minuten (konfigurierbar)
-- bcrypt Passwort-Hashing
-- Benutzer-Isolation (Zugriff nur auf eigene Daten)
-- Input-Validierung mit Pydantic
-- OAuth2 Password Flow
-
-## Testing mit Swagger UI
-
-1. Öffne http://127.0.0.1:8000/docs
-2. Registriere einen Benutzer über `POST /auth`
-3. Melde dich an über `POST /token` und kopiere den access_token
-4. Klicke auf "Authorize" (Schloss-Symbol oben rechts)
-5. Gib ein: `<dein_access_token>` (ohne "Bearer")
-6. Jetzt kannst du alle geschützten Endpoints testen
-7. Erstelle mehrere Einträge
-8. Exportiere sie als Excel über `GET /export`
-
-## Tipps
-
-- Die Datenbank wird automatisch beim ersten Start erstellt
-- Token ist 30 Minuten gültig, danach neu einloggen
-- Excel-Dateien werden im `temp/` Verzeichnis gespeichert
-- Der Export ist sortiert nach Zeitstempel (älteste zuerst)
-- Gesamtdauer wird automatisch in der Excel-Datei berechnet
-
-## Erweiterte Konfiguration
-
-In der `.env` Datei kannst du anpassen:
-
-- `JWT_SECRET_KEY`: Secret Key für JWT-Signierung (WICHTIG: In Produktion ändern!)
-- `ACCESS_TOKEN_EXPIRE_MINUTES`: Token-Gültigkeitsdauer in Minuten
-
-## Abgabe
-
-Die Excel-Datei kann direkt aus dem `GET /export` Endpoint heruntergeladen und abgegeben werden. Sie enthält:
-
-- Alle deine Einträge chronologisch sortiert
-- Formatierte Tabelle mit Header
-- Berechnung der Gesamtdauer
-- Professionelles Layout für die Abgabe
-
-Viel Erfolg! 🚀
+© 2025 Thorsten Teetzen
